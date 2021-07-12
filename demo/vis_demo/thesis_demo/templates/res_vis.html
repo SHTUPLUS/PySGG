@@ -1,0 +1,296 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!-- saved from url=(0037)http://visualgenome.org/VGViz/explore -->
+<html lang="en"
+      class="wf-adelle-n3-active wf-adelle-n7-active wf-franklingothicurw-n4-active wf-franklingothicurw-n5-active wf-franklingothicurw-n7-active wf-active">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <title>Visual Relationships Detection Online Demo</title>
+    <!-- <link rel="shortcut icon" href="http://visualgenome.org/static/images/favicon.ico" type="image/x-icon"> -->
+
+</head>
+<body class="" style="">
+
+
+<!-- Not sure if we need this one anymore -->
+<link rel="stylesheet" href="./static/css/jquery-ui.css">
+
+<!-- jQuery and plugins. Not sure if we need jQuery-UI anymore. -->
+<script async="" src="http://www.google-analytics.com/analytics.js"></script>
+<script src="./static/lib_js/jquery.min.js"></script>
+<script src="./static/lib_js/jquery-ui.min.js"></script>
+<script src="./static/lib_js/jquery.json-2.4.min.js"></script>
+
+<!-- Drawing libraries: Raphael and d3. -->
+<script>SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function (toElement) {
+    return toElement.getScreenCTM().inverse().multiply(this.getScreenCTM());
+};</script>
+<script src="./static/lib_js/raphael-min.js"></script>
+<script src="./static/lib_js/d3.min.js"></script>
+<script type="text/javascript" src="./static/d3.geom.js"></script>
+<script src="./static/lib_js/dagre-d3.min.js"></script>
+
+<!-- Bootstrap JS and CSS -->
+<link href="./static/css/bootstrap.min.css" rel="stylesheet">
+<script src="./static/lib_js/bootstrap.min.js"></script>
+
+<!-- Underscore and string extension -->
+
+<script src="./static/underscore.js"></script>
+<script src="./static/lib_js/underscore.string.min.js"></script>
+
+<!-- Load c3 for charts -->
+<link href="./static/css/c3.min.css" rel="stylesheet" type="text/css">
+<script src="./static/lib_js/c3.min.js"></script>
+
+<!-- Histogram JS -->
+<script src="./static/histogram.js"></script>
+
+<!-- Backbone -->
+<script src="./static/lib_js/backbone-min.js"></script>
+
+<link rel="stylesheet" href="./static/css/joint.min.css">
+<script src="./static/lib_js/geometry.min.js"></script>
+<script src="./static/lib_js/vectorizer.min.js"></script>
+<script src="./static/lib_js/joint.clean.lodash.directed.min.js"></script>
+
+<script src="./static/TurkUtils.js"></script>
+
+<script src="./static/utils.js"></script>
+<script src="./static/alerter.js"></script>
+<script src="./static/client-error-log.js"></script>
+<script src="./static/synset-picker.js"></script>
+<script src="./static/image-object.js"></script>
+<script src="./static/text-box.js"></script>
+<script src="./static/circle-object.js"></script>
+<script src="./static/arrow.js"></script>
+<script src="./static/colors.js"></script>
+<script src="./static/image-canvas.js"></script>
+<script src="./static/affordances-lib.js"></script>
+<script src="./static/materials-lib.js"></script>
+<script src="./static/bbox-lib.js"></script>
+<script src="./static/bbox-drawer.js"></script>
+<script src="./static/phase1-lib.js"></script>
+<script src="./static/carosel.js"></script>
+<script src="./static/spread-objects.js"></script>
+<script src="./static/visualize-assignment-results.js"></script>
+<script src="./static/render-data.js"></script>
+<script src="./static/open-sentences-backbone-lib.js"></script>
+
+<script src="./static/open-sentences-lib.js"></script>
+<script src="./static/render-open-sentences-results.js"></script>
+
+<script src="./static/visualize_single_image.js"></script>
+<script src="./static/render-image-graph.js"></script>
+
+<script src="./static/census.js"></script>
+
+<link rel="stylesheet" href="./static/css/common.css">
+<link rel="stylesheet" href="./static/css/synset-picker.css">
+<link rel="stylesheet" href="./static/css/materials.css">
+
+
+<link rel="stylesheet" href="./static/css/bootswatch.css">
+<link rel="stylesheet" href="./static/css/base.css">
+
+
+<nav class="navbar navbar-inverse" style="">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+  </div>
+</nav>
+
+
+<style>
+    .form-text {
+        font-size: 24px;
+        padding-top: 3px;
+    }
+
+    .searchRow {
+        padding-left: 0.5em;
+        padding-right: 0.5em;
+        padding-top: 1em;
+        padding-bottom: 1em;
+        margin: 20px 0;
+        border: 1px solid #eee;
+        background-color: #eee;
+    }
+
+    .lists {
+        max-height: 25em;
+        overflow-y: scroll;
+    }
+
+    .elem {
+        margin-top: 1px;
+        background-color: white;
+        color: black;
+        width: 100%;
+        padding-top: 5px;
+        padding-left: 5px;
+        padding-bottom: 5px;
+    }
+
+    .elem a {
+        color: black
+    }
+
+    .phraseBox {
+        font-size: 16;
+        color: white;
+        padding-left: 4px;
+        padding-right: 4px;
+        margin: 2px 2px;
+        border: 1px solid #666666;
+        background-color: #666666;
+        display: inline-block;
+    }
+
+    .phraseBox a {
+        color: white;
+    }
+
+    .relBox {
+        color: white;
+        padding-left: 4px;
+        padding-right: 4px;
+        margin: 2px 2px;
+        border: 1px solid #328132;
+        background-color: #328132;
+        display: inline-block;
+    }
+
+    .attrBox {
+        color: white;
+        padding-left: 4px;
+        padding-right: 4px;
+        margin: 2px 2px;
+        border: 1px solid #00ace6;
+        background-color: #00ace6;
+        display: inline-block;
+    }
+
+    .qaBox {
+        color: white;
+        padding-left: 4px;
+        padding-right: 4px;
+        margin: 2px 2px;
+        border: 1px solid #cc6600;
+        background-color: #cc6600;
+        display: inline-block;
+    }
+
+    .qaBox a {
+        color: white;
+    }
+
+    .relBox a {
+        color: white;
+    }
+
+    .attrBox a {
+        color: white;
+    }
+
+    .obj-box {
+    }
+
+    .rel-box {
+    }
+
+    .attr-box {
+    }
+</style>
+
+
+
+<div class="container">
+
+
+    <!-- The box titel -->
+    <h1>Visual Relationships Detection Online Demo</h1>
+
+
+    <form style="padding-top: 1em; padding-bottom: 1em;" id="explore_search_page" class="" role="search">
+        <div class="row">
+            <label class="col-md-3 col-xs-3 form-text">Result</label>
+
+            <!-- <input style="border:2px solid; height:45px; width:50%;" id="explore_search_page_input" type="text"
+                   class="col-md-6 col-xs-6 form-control" value="throwing frisbee"> -->
+
+            <!-- <label style="cursor:pointer;" class="form-text col-md-3 col-xs-3 glyphicon glyphicon-search"
+                   id="explore_search_glyph"></label> -->
+        </div>
+    </form>
+
+    <!-- the visualization result will be inflated here -->
+    <div style="min-height:800px;" id="searchResults">
+    </div>
+
+
+
+</div>
+
+
+<script src="./static/render-search-row.js"></script>
+<script type="text/javascript" src="./static/search_results.js"></script>
+
+
+<div class="" style="min-height:40px; margin-top:2em; color:white; background-color:#707070">
+    <div class="container" style="line-height: 30px">
+        <span style="float:left; padding-top: 5px;">© <a style="color:white;"
+                                                         href="http://visualgenome.org">Powered by Visual Genome Dataset</a>&nbsp;&nbsp;&nbsp;</span>
+        <span style="float:left; color:white; padding-top: 5px;"><a style="color:white;" rel="license"
+                                                                    href="http://creativecommons.org/licenses/by/4.0/">Creative Commons</a></span>
+        <span style="float:right; color:white; padding-top: 5px;">&nbsp;&nbsp;ShanghaiTech University</span>
+
+    </div>
+</div>
+
+
+<script src="./static/animatedHeader.js"></script>
+<script>
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+            m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+    ga('create', 'UA-63463330-2', 'auto');
+    ga('send', 'pageview');
+
+    $('#explore_search').submit(function (event) {
+        event.preventDefault();
+        var query = $('#explore_search_input').val();
+        window.location.replace('/VGViz/explore?query=' + query);
+    });
+
+</script>
+
+
+
+<!-- the data going to be visualize in stored here as url encoded json-->
+
+<input type="hidden" id="images"
+       value="{{ det_res }}">
+
+</input>
+
+
+
+
+
+</body>
+</html>

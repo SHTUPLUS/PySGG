@@ -1,0 +1,108 @@
+MODEL:
+  META_ARCHITECTURE: "GeneralizedRCNN"
+  WEIGHT: "catalog://ImageNetPretrained/MSRA/R-50"
+  BACKBONE:
+    CONV_BODY: "R-50-C4"
+  RESNETS:
+    BACKBONE_OUT_CHANNELS: 1024
+  RELATION_ON: True
+  ATTRIBUTE_ON: False
+  FLIP_AUG: False
+  RPN:
+    ANCHOR_SIZES: (35.54447264, 65.97050352, 115.4708024, 201.64208208, 363.3643696) # from neural-motifs
+    ANCHOR_STRIDE:  (16, )
+    ASPECT_RATIOS: (0.23232838, 0.63365731, 1.28478321, 3.15089189)   # f
+    BATCH_SIZE_PER_IMAGE: 256
+    BG_IOU_THRESHOLD: 0.3
+    FG_IOU_THRESHOLD: 0.7
+    FPN_POST_NMS_PER_BATCH: false
+    FPN_POST_NMS_TOP_N_TEST: 2000
+    FPN_POST_NMS_TOP_N_TRAIN: 2000
+    MIN_SIZE: 0
+    NMS_THRESH: 0.7
+    POSITIVE_FRACTION: 0.5
+    POST_NMS_TOP_N_TEST: 1000
+    POST_NMS_TOP_N_TRAIN: 2000
+    PRE_NMS_TOP_N_TEST: 6000
+    PRE_NMS_TOP_N_TRAIN: 12000
+    RPN_HEAD: SingleConvRPNHead
+    RPN_MID_CHANNEL: 1024
+    STRADDLE_THRESH: 0
+    USE_FPN: false
+  ROI_HEADS:
+    USE_FPN: False
+    POSITIVE_FRACTION: 0.5
+    BG_IOU_THRESHOLD: 0.3
+    BATCH_SIZE_PER_IMAGE: 256
+    DETECTIONS_PER_IMG: 100
+    NMS_FILTER_DUPLICATES: False
+  ROI_BOX_HEAD:
+    POOLER_RESOLUTION: 7
+    POOLER_SCALES: (0.0625, )
+    POOLER_SAMPLING_RATIO: 0
+    FEATURE_EXTRACTOR: "ResNet50Conv5ROIFeatureExtractor"
+    PREDICTOR: "FastRCNNPredictor"
+    NUM_CLASSES: 151                    # 151 for VG, 1201 for GQA
+    MLP_HEAD_DIM: 2048
+  ROI_RELATION_HEAD:
+    USE_GT_BOX: False
+    USE_GT_OBJECT_LABEL: False
+    NUM_CLASSES: 51                 # 51 for VG, 201 for GQA (not contain "to the left of" & "to the right of")
+    ADD_GTBOX_TO_PROPOSAL_IN_TRAIN: True
+    BATCH_SIZE_PER_IMAGE: 1024
+    POSITIVE_FRACTION: 0.25
+    CONTEXT_POOLING_DIM: 4096
+    CONTEXT_HIDDEN_DIM: 512
+    POOLING_ALL_LEVELS: True
+    MAX_PROPOSAL_PAIR: 2048
+    FEATURE_EXTRACTOR: "RelationFeatureExtractor"
+    GEOMETRIC_FEATURES: True
+    WORD_EMBEDDING_FEATURES: True
+    EDGE_FEATURES_REPRESENTATION: "fusion"
+    FREQUENCY_BAIS: True
+    PREDICTOR: "MSDNPredictor"
+    CLASSIFIER: "linear"
+    CAUSAL:
+      EFFECT_ANALYSIS: False
+      SPATIAL_FOR_VISION: True
+    DATA_RESAMPLING: False
+    TAIL_REPEAT_FACTOR: 0.018
+    BODY_REPEAT_FACTOR: 0.009
+    BODY_CATE_DROP_RATE: 0.8
+    HEAD_CATE_DROP_RATE: 0.4
+
+DATASETS:
+  TRAIN: ("VG_stanford_filtered_with_attribute_train",)
+  VAL: ("VG_stanford_filtered_with_attribute_val",)
+  TEST: ("VG_stanford_filtered_with_attribute_test",)
+DATALOADER:
+  SIZE_DIVISIBILITY: 32
+SOLVER:
+  BIAS_LR_FACTOR: 1
+  BASE_LR: 0.001
+  WARMUP_FACTOR: 0.1
+  WEIGHT_DECAY: 0.0001
+  MOMENTUM: 0.9
+  GRAD_NORM_CLIP: 5.0
+  STEPS: (10000, 16000)
+  MAX_ITER: 40000
+  PRE_VAL: False
+  VAL_PERIOD: 2000
+  CHECKPOINT_PERIOD: 2000
+  PRINT_GRAD_FREQ: 5000
+  SCHEDULE:
+    # the following paramters are only used for WarmupReduceLROnPlateau
+    TYPE: "WarmupReduceLROnPlateau"    # WarmupMultiStepLR, WarmupReduceLROnPlateau
+    PATIENCE: 5
+    THRESHOLD: 0.001
+    COOLDOWN: 0
+    FACTOR: 0.3
+    MAX_DECAY_STEP: 4
+OUTPUT_DIR: './checkpoints'
+TEST:
+  ALLOW_LOAD_FROM_CACHE: False
+  RELATION:
+    SYNC_GATHER: True      # turn on will slow down the evaluation to solve the sgdet test out of memory problem
+    REQUIRE_OVERLAP: False
+    LATER_NMS_PREDICTION_THRES: 0.5
+GLOVE_DIR: datasets/vg/stanford_spilt/glove
