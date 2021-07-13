@@ -30,7 +30,7 @@ dist/
 # MacOS
 .DS_Store
 
-scripts/*
+# scripts/*
 
 pymp-*
 
