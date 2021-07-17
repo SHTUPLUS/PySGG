@@ -16,16 +16,6 @@ Check [DATASET.md](DATASET.md) for instructions of dataset preprocessing.
 
 ## Model Zoo 
 BGNN performance:
-### VG
-| Model(SGGen) | mR@50 | mR@100 | R@50 | R@100 | head | body | tail |
-|--------------|:-----:|:------:|:----:|:-----:|------|------|------|
-| BGNN         |  10.9 |  13.55 | 29.8 |  34.6 | 33.4 | 13.4 | 6.4  |
-
-
-### OIv6
-| Model(SGGen) | mR@50 | R@50 | wmAP_rel | wmAP_phr | score_wtd |
-|---|:---:|:---:|:---:|:---:|---|
-| BGNN | 41.71 | 74.96 | 33.83 | 34.87 | 42.47 |
 
 The methods implemented in our toolkit and reported results are given in [Model Zoo.md](MODELZOO.md)
 

@@ -12,7 +12,7 @@ python -m torch.distributed.launch --master_port 10028 --nproc_per_node=$gpu_num
        EXPERIMENT_NAME "$exp_name" \
         SOLVER.IMS_PER_BATCH $[3*$gpu_num] \
         TEST.IMS_PER_BATCH $[$gpu_num] \
-        SOLVER.VAL_PERIOD 1000 \
-        SOLVER.CHECKPOINT_PERIOD 1000 
+        SOLVER.VAL_PERIOD 2000 \
+        SOLVER.CHECKPOINT_PERIOD 2000 
 
 

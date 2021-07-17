@@ -1,5 +1,4 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
-import ipdb
 import torch
 
 from pysgg.modeling.roi_heads.relation_head.rel_proposal_network.models import (
@@ -20,7 +19,9 @@ from ..box_head.roi_box_feature_extractors import (
     make_roi_box_feature_extractor,
     ResNet50Conv5ROIFeatureExtractor,
 )
-
+from pysgg.modeling.roi_heads.relation_head.model_kern import (
+    to_onehot,
+)
 
 class ROIRelationHead(torch.nn.Module):
     """
@@ -30,6 +31,19 @@ class ROIRelationHead(torch.nn.Module):
     def __init__(self, cfg, in_channels):
         super(ROIRelationHead, self).__init__()
         self.cfg = cfg.clone()
+
+        self.num_obj_cls = cfg.MODEL.ROI_BOX_HEAD.NUM_CLASSES
+        self.num_rel_cls = cfg.MODEL.ROI_RELATION_HEAD.NUM_CLASSES
+
+        # mode
+        if cfg.MODEL.ROI_RELATION_HEAD.USE_GT_BOX:
+            if cfg.MODEL.ROI_RELATION_HEAD.USE_GT_OBJECT_LABEL:
+                self.mode = "predcls"
+            else:
+                self.mode = "sgcls"
+        else:
+            self.mode = "sgdet"
+
         # same structure with box head, but different parameters
         # these param will be trained in a slow learning rate, while the parameters of box head will be fixed
         # Note: there is another such extractor in uniton_feature_extractor
@@ -128,6 +142,15 @@ class ROIRelationHead(torch.nn.Module):
             rel_pair_idxs = self.samp_processor.prepare_test_pairs(
                 features[0].device, proposals
             )
+
+        if self.mode == "predcls":
+            # overload the pred logits by the gt label
+            device = features[0].device
+            for proposal in proposals:
+                obj_labels = proposal.get_field("labels")
+                proposal.add_field("predict_logits", to_onehot(obj_labels, self.num_obj_cls))
+                proposal.add_field("pred_scores", torch.ones(len(obj_labels)).to(device))
+                proposal.add_field("pred_labels", obj_labels.to(device))
 
         # use box_head to extract features that will be fed to the later predictor processing
         roi_features = self.box_feature_extractor(features, proposals)

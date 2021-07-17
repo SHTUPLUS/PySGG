@@ -407,6 +407,7 @@ class MSDNPredictor(nn.Module):
             union_features (Tensor): (batch_num_rel, context_pooling_dim): visual union feature of each pair
         """
 
+
         obj_feats, rel_feats, pre_cls_logits, relatedness = self.context_layer(
             roi_features, union_features, inst_proposals, rel_pair_idxs, rel_binarys, logger
         )
@@ -598,6 +599,7 @@ class BGNNPredictor(nn.Module):
             union_features (Tensor): (batch_num_rel, context_pooling_dim): visual union feature of each pair
         """
 
+
         obj_feats, rel_feats, pre_cls_logits, relatedness = self.context_layer(
             roi_features, union_features, inst_proposals, rel_pair_idxs, rel_binarys, logger
         )
@@ -610,7 +612,7 @@ class BGNNPredictor(nn.Module):
             obj_labels = cat(
                 [proposal.get_field("labels") for proposal in inst_proposals], dim=0
             )
-            refined_obj_logits = to_onehot(obj_labels, self.num_obj)
+            refined_obj_logits = to_onehot(obj_labels, self.num_obj_cls)
         else:
             refined_obj_logits = self.obj_classifier(obj_feats)
 
@@ -625,18 +627,21 @@ class BGNNPredictor(nn.Module):
 
         # using the object results, update the pred label and logits
         if self.use_obj_recls_logits:
-            boxes_per_cls = cat(
-                [proposal.get_field("boxes_per_cls") for proposal in inst_proposals], dim=0
-            )  # comes from post process of box_head
-            # here we use the logits refinements by adding
-            if self.obj_recls_logits_update_manner == "add":
-                obj_pred_logits = refined_obj_logits + obj_pred_logits
-            if self.obj_recls_logits_update_manner == "replace":
-                obj_pred_logits = refined_obj_logits
-            refined_obj_pred_labels = obj_prediction_nms(
-                boxes_per_cls, obj_pred_logits, nms_thresh=0.5
-            )
-            obj_pred_labels = refined_obj_pred_labels
+            if self.mode == "sgdet":
+                boxes_per_cls = cat(
+                    [proposal.get_field("boxes_per_cls") for proposal in inst_proposals], dim=0
+                )  # comes from post process of box_head
+                # here we use the logits refinements by adding
+                if self.obj_recls_logits_update_manner == "add":
+                    obj_pred_logits = refined_obj_logits + obj_pred_logits
+                if self.obj_recls_logits_update_manner == "replace":
+                    obj_pred_logits = refined_obj_logits
+                refined_obj_pred_labels = obj_prediction_nms(
+                    boxes_per_cls, obj_pred_logits, nms_thresh=0.5
+                )
+                obj_pred_labels = refined_obj_pred_labels
+            else:
+                _, obj_pred_labels = refined_obj_logits[:, 1:].max(-1)
         else:
             obj_pred_labels = cat(
                 [each_prop.get_field("pred_labels") for each_prop in inst_proposals], dim=0
@@ -1481,6 +1486,8 @@ class NaivePredictor(nn.Module):
         num_rels = [r.shape[0] for r in rel_pair_idxs]
         num_objs = [len(b) for b in proposals]
         obj_boxs = [get_box_info(p.bbox, need_norm=True, proposal=p) for p in proposals]
+
+
 
         assert len(num_rels) == len(num_objs)
 

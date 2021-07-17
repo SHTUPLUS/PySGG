@@ -267,48 +267,6 @@ class GPSNetContext(nn.Module):
             nn.ReLU()
         )
 
-        ################ rel_prop by pre predicates classifier #####################
-        self.rel_prop_on = self.cfg.MODEL.ROI_RELATION_HEAD.RELATION_PROPOSAL_MODEL.SET_ON
-        self.rel_prop_type = self.cfg.MODEL.ROI_RELATION_HEAD.RELATION_PROPOSAL_MODEL.METHOD
-
-        self.graph_filtering_method = cfg.MODEL.ROI_RELATION_HEAD.RELATION_PROPOSAL_MODEL.METHOD
-
-        self.vail_pair_num = cfg.MODEL.ROI_RELATION_HEAD.GPSNET_MODULE.MP_VALID_PAIRS_NUM
-
-        self.use_clser_score_as_relness = False
-
-        self.filter_the_mp_instance = cfg.MODEL.ROI_RELATION_HEAD.GPSNET_MODULE.MP_ON_VALID_PAIRS
-        if self.filter_the_mp_instance:
-            assert self.rel_prop_on
-
-        if  self.filter_the_mp_instance and self.rel_prop_type == "pre_clser" :
-            self.use_clser_score_as_relness = True
-
-        self.mp_pair_refine_iter = 1
-        if self.filter_the_mp_instance:
-            if cfg.MODEL.ROI_RELATION_HEAD.GPSNET_MODULE.ITERATE_MP_PAIR_REFINE > 1:
-                self.mp_pair_refine_iter = cfg.MODEL.ROI_RELATION_HEAD.GPSNET_MODULE.ITERATE_MP_PAIR_REFINE
-
-        self.relness_weighting_mp = False
-        if cfg.MODEL.ROI_RELATION_HEAD.RELATION_PROPOSAL_MODEL.SET_ON:
-            self.relness_weighting_mp = cfg.MODEL.ROI_RELATION_HEAD.GPSNET_MODULE.RELNESS_MP_WEIGHTING
-
-            self.min_relness = nn.Parameter(torch.Tensor([1e-5, ]), requires_grad=False)
-            self.max_relness = nn.Parameter(torch.Tensor([0.5, ]), requires_grad=False)
-
-        self.pre_rel_classifier = None
-        if self.use_clser_score_as_relness:
-            self.use_bias = cfg.MODEL.ROI_RELATION_HEAD.FREQUENCY_BAIS
-            if self.use_bias:
-                statistics = get_dataset_statistics(cfg)
-                self.freq_bias = FrequencyBias(cfg, statistics)
-            if self.mp_pair_refine_iter > 1:
-                self.pre_rel_classifier = nn.ModuleList()
-                for ii in range(self.mp_pair_refine_iter):
-                    self.pre_rel_classifier.append(
-                        make_relation_confidence_aware_module(self.pooling_dim))
-            else:
-                self.pre_rel_classifier = make_relation_confidence_aware_module(self.pooling_dim)
 
     def _pre_predciate_classification(self, relatedness_scores, proposals, rel_pair_inds,
                                       refine_iter, refine_rel_feats_each_iters):
@@ -497,28 +455,9 @@ class GPSNetContext(nn.Module):
         rel_graph_iter_feat = []
         obj_graph_iter_feat = []
 
-        for refine_iter in range(self.mp_pair_refine_iter):
+        for _ in range(1):
             valid_inst_idx = []
             curr_iter_relatedness = None
-            if self.filter_the_mp_instance:
-                # filter relationship by pre clser
-                if self.use_clser_score_as_relness:
-                    assert relatedness is not None
-                    relatedness_scores = relatedness[0]
-                    pre_cls_logits, curr_iter_relatedness = self._pre_predciate_classification(
-                        relatedness_scores, proposals, rel_pair_inds, refine_iter, refine_rel_feats_each_iters
-                    )
-                    pre_cls_logits_each_iter.append(pre_cls_logits)
-
-                # gt filtering: directly use the assigned labels
-                elif self.rel_prop_type == 'gt':
-                    curr_iter_relatedness = relatedness[0]
-                else:
-                    raise ValueError("invalid rel_prop_type")
-                # collect the relness scores
-                relatedness_each_iters.append(curr_iter_relatedness)
-
-
                 # filter the instance
             valid_inst_idx = None
             if self.mode == "sgdet":
@@ -549,19 +488,6 @@ class GPSNetContext(nn.Module):
             # do msp
             msp_inst_feats_each_iters = [augment_obj_feat]
             msp_rel_feats_each_iters = [rel_feats]
-
-            # no valid node in graph, we can't do any mp just return
-            if self.filter_the_mp_instance:
-                if len(squeeze_tensor(valid_inst_idx.nonzero())) < 1 or len(
-                        squeeze_tensor(batchwise_rel_pair_inds.nonzero())) < 1 \
-                        or len(squeeze_tensor(subj2pred_inds.nonzero())) < 1 or len(
-                    squeeze_tensor(obj2pred_inds.nonzero())) < 1:
-                    # print(valid_inst_idx.nonzero())
-                    # print(batchwise_rel_pair_inds.nonzero())
-                    # print(subj_pred_map.nonzero())
-                    # print(obj_pred_map.nonzero())
-                    # print("WARNING: all graph nodes has been filtered out. ")
-                    break
 
             for t in range(self.update_step):
                 # msp on entities features
@@ -611,19 +537,10 @@ class GPSNetContext(nn.Module):
             paired_inst_feats = self.pairwise_rel_features(msp_inst_feats_each_iters[-1], batchwise_rel_pair_inds)
             refine_rel_feats_each_iters.append(paired_inst_feats + msp_rel_feats_each_iters[-1])
 
-        if len(relatedness_each_iters) > 0 and not self.training:
-            relatedness_each_iters = torch.stack(
-                [torch.stack(each) for each in relatedness_each_iters])
-            # iter_num, bsz, num_obj, num_obj
-            relatedness_each_iters = relatedness_each_iters.permute(1, 2, 3, 0)
-        else:
-            relatedness_each_iters = None
 
-        if len(pre_cls_logits_each_iter) == 0:
-            pre_cls_logits_each_iter = None
 
         refined_inst_features = refine_entit_feats_each_iters[-1]
 
         refined_rel_features = refine_rel_feats_each_iters[-1]
 
-        return refined_inst_features, refined_rel_features, pre_cls_logits_each_iter, relatedness_each_iters
+        return refined_inst_features, refined_rel_features, None, None
